@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE EXPERIMENT</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #050607;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    #game {
+      position: relative;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 50% 45%,
+          #303437 0%, #151819 35%, #030404 85%);
+    }
+
+    .ceiling {
+      position: absolute;
+      inset: 0 0 auto;
+      height: 25%;
+      background: linear-gradient(#090b0c, #202426);
+      border-bottom: 3px solid #090a0b;
+    }
+
+    .floor {
+      position: absolute;
+      bottom: 0;
+      height: 30%;
+      width: 100%;
+      background: linear-gradient(#151819, #030404);
+      clip-path: polygon(25% 0, 75% 0, 100% 100%, 0 100%);
+    }
+
+    .door {
+      position: absolute;
+      width: 30%;
+      height: 48%;
+      top: 27%;
+      left: 35%;
+      border: 7px solid #080909;
+      background: linear-gradient(90deg, #101314, #292d2e, #101314);
+      box-shadow: 0 0 35px #000;
+    }
+
+    .door::after {
+      content: "";
+      position: absolute;
+      right: 12%;
+      top: 50%;
+      width: 7px;
+      height: 7px;
+      background: #aaa;
+      border-radius: 50%;
+    }
+
+    .light {
+      position: absolute;
+      top: 12%;
+      left: 40%;
+      width: 20%;
+      height: 5px;
+      background: #c9d2d2;
+      box-shadow: 0 0 35px 12px #a8b8bd55;
+      animation: flicker 4s infinite;
+    }
+
+    @keyframes flicker {
+      0%, 18%, 20%, 60%, 63%, 100% { opacity: 1; }
+      19%, 61% { opacity: .15; }
+    }
+
+    .hud {
+      position: absolute;
+      inset: 18px 16px auto;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: #cbd0d0;
+    }
+
+    #message {
+      position: absolute;
+      z-index: 3;
+      left: 10%;
+      right: 10%;
+      top: 57%;
+      text-align: center;
+      text-shadow: 0 2px 8px black;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .controls {
+      position: absolute;
+      z-index: 4;
+      bottom: 22px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    button {
+      padding: 13px 17px;
+      color: white;
+      background: #171b1d;
+      border: 1px solid #6b7477;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    button:active {
+      background: #454d50;
+    }
+
+    #flash {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #flash.scare {
+      animation: scare .6s ease-out;
+    }
+
+    @keyframes scare {
+      0% { opacity: .9; }
+      100% { opacity: 0; }
+    }
+
+    #monster {
+      display: none;
+      position: absolute;
+      z-index: 2;
+      top: 29%;
+      left: 39%;
+      width: 22%;
+      height: 30%;
+      background: #030303;
+      border-radius: 45% 45% 15% 15%;
+      box-shadow: 0 0 30px #000;
+    }
+
+    #monster::before {
+      content: "●  ●";
+      position: absolute;
+      top: 22%;
+      left: 18%;
+      color: #e5e5e5;
+      font-size: 19px;
+      letter-spacing: 5px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #titleScreen {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 24px;
+      text-align: center;
+      background: radial-gradient(ellipse, #202426, #030404 75%);
+    }
+
+    #titleScreen h1 {
+      font-size: clamp(30px, 8vw, 54px);
+      letter-spacing: 5px;
+      margin: 0;
+    }
+
+    #titleScreen p {
+      color: #aab0b2;
+      letter-spacing: 3px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <main id="game">
+    <div class="ceiling"></div>
+    <div class="light"></div>
+    <div class="floor"></div>
+    <div class="door"></div>
+    <div id="monster"></div>
+    <div id="flash"></div>
+
+    <div class="hud">
+      <span>THE EXPERIMENT</span>
+      <span id="status">NOCHE 01</span>
+    </div>
+
+    <div id="message">
+      Hospital San Gabriel<br>
+      La búsqueda acaba de comenzar.
+    </div>
+
+    <div class="controls">
+      <button id="move">AVANZAR</button>
+      <button id="interact">EXAMINAR PUERTA</button>
+      <button id="flashlight">LINterna: ENCENDER</button>
+    </div>
+
+    <section id="titleScreen">
+      <h1>THE EXPERIMENT</h1>
+      <p>ALGUNOS SECRETOS NUNCA DEBIERON EXISTIR</p>
+      <button id="start">INICIAR JUEGO</button>
+    </section>
+  </main>
+
+  <script>
+    const title = document.getElementById("titleScreen");
+    const message = document.getElementById("message");
+    const status = document.getElementById("status");
+    const monster = document.getElementById("monster");
+    const flash = document.getElementById("flash");
+    const game = document.getElementById("game");
+    const light = document.querySelector(".light");
+
+    let started = false;
+    let moved = false;
+    let doorOpened = false;
+    let flashlightOn = false;
+
+    document.getElementById("start").addEventListener("click", () => {
+      started = true;
+      title.classList.add("hidden");
+      message.textContent =
+        "Daniel: Sebastián... ¿estás aquí?";
+    });
+
+    document.getElementById("move").addEventListener("click", () => {
+      if (!started) return;
+
+      moved = true;
+      message.textContent =
+        "Tus pasos resuenan por el hospital vacío...";
+      status.textContent = "SECTOR 01";
+
+      if (Math.random() > 0.45) {
+        monster.style.display = "block";
+        message.textContent =
+          "Algo te está observando desde la oscuridad...";
+      }
+    });
+
+    document.getElementById("interact").addEventListener("click", () => {
+      if (!started) return;
+
+      if (!moved) {
+        message.textContent =
+          "Acércate a la puerta antes de examinarla.";
+        return;
+      }
+
+      if (!doorOpened) {
+        doorOpened = true;
+        message.textContent =
+          "La puerta se abre lentamente. Hay un pasillo al otro lado...";
+        document.querySelector(".door").style.transform =
+          "perspective(500px) rotateY(-55deg)";
+        status.textContent = "PUERTA ABIERTA";
+      } else {
+        message.textContent =
+          "El pasillo está oscuro. Escuchas un ruido a lo lejos...";
+      }
+    });
+
+    document.getElementById("flashlight").addEventListener("click", () => {
+      if (!started) return;
+
+      flashlightOn = !flashlightOn;
+      light.style.boxShadow = flashlightOn
+        ? "0 0 70px 30px #e4eeee88"
+        : "0 0 35px 12px #a8b8bd55";
+
+      document.getElementById("flashlight").textContent =
+        flashlightOn ? "LINTERNA: APAGAR" : "LINTERNA: ENCENDER";
+
+      message.textContent = flashlightOn
+        ? "La luz revela las paredes deterioradas..."
+        : "La oscuridad vuelve a cubrir el pasillo.";
+    });
+
+    game.addEventListener("dblclick", () => {
+      if (!started) return;
+
+      flash.classList.remove("scare");
+      void flash.offsetWidth;
+      flash.classList.add("scare");
+
+      monster.style.display = "block";
+      message.textContent =
+        "¡HAY ALGO AHÍ! No estás solo en el hospital.";
+      status.textContent = "PELIGRO";
+    });
+  </script>
+</body>
+  </html>
